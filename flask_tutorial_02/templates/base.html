@@ -1,0 +1,21 @@
+{%- if not modal %}{% extends "_layout.html" %}
+{%- else %}{% extends "_modal.html" %}
+{%- endif %}
+
+
+{%- block body_base %}
+
+{%- if html %}
+{%- autoescape false %}
+{{ html }}
+{%- endautoescape %}
+{%- endif %}
+
+
+{%- if text %}
+<pre>
+{{ text }}
+</pre>
+{%- endif %}
+
+{%- endblock %}

@@ -1,0 +1,106 @@
+{%- if not modal %}{% extends "_layout.html" %}
+{%- else %}{% extends "_modal.html" %}
+{%- endif %}
+
+
+{%- block head_base %}
+  <!-- DataTables core CSS -->
+  <link href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" rel="stylesheet" />
+{%- endblock %}
+
+
+{%- block body_base %}
+
+<table class="table table-bordered table-hover table-sm table-responsive d-table" id="table1">
+  <caption>{{ caption }}</caption>
+  <thead>
+    <tr>
+{%- if seq %}
+      <th scope="col">#</th>
+{%- endif %}
+{%- for name in names %}
+      <th scope="col">{{ name }}</th>
+{%- endfor %}
+    </tr>
+  </thead>
+</table>
+
+
+{%- if html %}
+{%- autoescape false %}
+{{ html }}
+{%- endautoescape %}
+{%- endif %}
+
+
+{%- if text %}
+<pre>
+{{ text }}
+</pre>
+{%- endif %}
+
+{%- endblock %}
+
+
+{%- block script_base %}
+
+<!-- DataTables core JavaScript -->
+<script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+
+<script>
+
+  var columns = [
+{%- for name in required_columns %}
+    {
+      "data": "{{ name }}",
+{%- if name in column_info %}
+{%- set data, tr_class, td_class, url = column_info[name] %}
+      "render": function ( data, type, row ) {
+        return `<a href="{{ url }}?{{ data }}=${row['{{ data }}']}" data-toggle="modal" data-target="#iaModal"><i class="{{ td_class }}"></i></a> ${data}`
+      }
+{%- endif %}
+    },
+{%- endfor %}
+  ]
+
+{%- if seq %}
+  columns.unshift(
+    {
+      data: null,
+      searchable: false,
+      orderable: false,
+      render: function ( data, type, row ) {
+        return `<i class="inactive">${row["_seq"]}</i>`
+      }
+    }
+  );
+{%- endif %}
+
+{%- for extra in columns_extra %}
+{%- set data, tr_class, tr, td_class, td, url = extra %}
+  columns.push(
+    {
+      data: "{{ data }}",
+      searchable: false,
+      orderable: false,
+      className: "center",
+      render: function ( data, type, row ) {
+        return `<a href="{{ url }}?{{ data }}=${data}" data-toggle="modal" data-target="#iaModal"><i class="{{ td_class }}"></i></a>`
+      }
+    }
+  );
+{%- endfor %}
+
+  $(document).ready( function() {
+
+    $('table#table1').DataTable( {
+      "ajax": location.href,
+      "processing": true,
+      "serverSide": true,
+      "columns": columns
+    } );
+  } );
+
+</script>
+
+{%- endblock %}

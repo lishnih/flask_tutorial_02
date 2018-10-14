@@ -102,3 +102,16 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# mine
+*.sh
+*.bat
+*.lnk
+*.sqlite
+*.db
+*.ppr
+*.e4p
+*.npp
+*~
+backup
+archive.list

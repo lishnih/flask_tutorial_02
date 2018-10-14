@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{%- from "_formhelpers.html" import render_submit, render_field, render_hidden %}
+
+{%- block body %}
+
+{%- if form %}
+<h3>{{ caption }}</h3>
+
+<form method="post">
+  {{ render_hidden(form.id) }}
+  {{ render_field(form.author, size=40) }}
+  {{ render_field(form.message, size=40) }}
+  {{ render_submit(form.submit) }}
+</form>
+{%- endif %}
+
+{%- endblock %}

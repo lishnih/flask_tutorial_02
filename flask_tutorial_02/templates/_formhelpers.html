@@ -1,0 +1,30 @@
+{% macro render_field(field) %}
+{%- if field.errors %}
+  <div class="form-group has-danger">
+    {{ field.label(class="form-control-label")|safe }}
+    {{ field(class="form-control is-invalid", **kwargs)|safe }}
+{%- else %}
+  <div class="form-group">
+    {{ field.label(class="form-control-label")|safe }}
+    {{ field(class="form-control", **kwargs)|safe }}
+{%- endif %}
+{%- for error in field.errors %}
+    <div class="invalid-feedback">{{ error|safe }}</div>
+{%- endfor %}
+  </div>
+{%- endmacro %}
+
+
+{% macro render_hidden(field) %}
+  <div>
+    {{ field.label(class="sr-only")|safe }}
+    {{ field(class="form-control", **kwargs)|safe }}
+  </div>
+{%- endmacro %}
+
+
+{% macro render_submit(field) %}
+  <div>
+    <button type="submit" class="btn btn-primary">{{ field.label.text|safe }}</button>
+  </div>
+{%- endmacro %}
