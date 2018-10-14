@@ -5,7 +5,8 @@
 from __future__ import (division, absolute_import,
                         print_function, unicode_literals)
 
-from flask import request, render_template, redirect, url_for, jsonify, flash
+from flask import (request, render_template, redirect, url_for,
+                   jsonify, flash, escape)
 from werkzeug.wrappers import Response
 
 from sqlalchemy import func, column, desc, or_
@@ -22,7 +23,8 @@ limit_default = 15
 
 # ===== Interface =====
 
-def render_ext(template_name_or_list=None, default=None, message="", format=None, **context):
+def render_ext(template_name_or_list=None, default=None, message="",
+        format=None, form=None, **context):
     format = format or request.values.get('format')
 
     result = "success"
@@ -45,6 +47,7 @@ def render_ext(template_name_or_list=None, default=None, message="", format=None
     return "No template defined!" if not template_name_or_list else \
         render_template(template_name_or_list,
             modal = format == 'modal',
+            form = form,
             **context
         )
 
@@ -90,9 +93,10 @@ def parse_multi_form(form):
     return data
 
 
+# Здесь же маскируются выводимые значения
 def row_iter(names, row, seq=None):
     for i in names:
-        yield i, getattr(row, i)
+        yield i, escape(getattr(row, i))
 
     yield "_seq", seq
 
@@ -118,7 +122,6 @@ def messages():
         _ = request.values.get('_')
 
         requested_params = parse_multi_form(request.values) # columns, order, search
-        print("=== requested_params:", requested_params)
 
         start = int(start) if start.isdigit() else 0
         length = int(length) if length.isdigit() else limit_default
@@ -130,17 +133,13 @@ def messages():
         column_names = dict([(i, column_params.get(i, {}).get('data')) for i in column_params.keys()])
         column_searchables = dict([(i, column_params.get(i, {}).get('searchable')) for i in column_params.keys()])
         column_searchables = [column_names.get(k) for k, v in column_searchables.items() if v == 'true']
-        print("=== column_names:", column_names)
-        print("=== column_searchables:", column_searchables)
 
         search_params = requested_params.get('search', {})
         search = search_params.get('value')
         regex = search_params.get('regex')
-        print("=== search:", search, regex)
 
         criterion = or_(*[column(i).like("%{0}%".format(search)) for i in column_searchables]) \
             if search else None
-        print("=== criterion:", criterion)
 
         if criterion is None:
             filtered = total
@@ -158,7 +157,6 @@ def messages():
             if sort_column:
                 c = desc(column(sort_column)) if sort_dir == 'desc' else column(sort_column)
                 order.append(c)
-        print("=== order:", order)
 
         if order:
             s = s.order_by(*order)
@@ -168,18 +166,15 @@ def messages():
         if length:
             s = s.limit(length)
 
-#         print(s.compile(db.engine, compile_kwargs={"literal_binds": True}))
-        print(s)
-
         rows = s.all()
         rows = [dict(row_iter(required_columns, row, start+j)) for j, row in enumerate(rows, 1)]
 
         return render_ext(
             format = "json",
-            draw = draw,
+            draw = draw,    # Переменная получена из запроса, но не используется для вывода (потенциально безопасная)
             recordsTotal = total,
             recordsFiltered = filtered,
-            data = rows,
+            data = rows,    # Данные полученные из запроса, необходимо маскировать (потенциально опасная) - маскировка в row_iter
         )
 
     required_columns.remove('id')
@@ -194,6 +189,7 @@ def messages():
     names = [columns_dictionary.get(i) or i for i in required_columns] + ['']
 
     return render_template("message/messages.html",
+        title = "Messages",
         required_columns = required_columns,
         names = names,
         seq = True,
@@ -226,13 +222,16 @@ def message_add():
             return render_ext("message/add_edit.html",
                 default = redirect(url_for('messages')),
                 message = ("Please check your data entered!", "warning"),
-                caption = "Add a message",
+                section = "Add a message",
                 form = form,
+                # (потенциально опасная) - маскировка (если отключено по умолчанию) в _formhelpers.html
+                # в json переменная не попадает (и не сможет быть конвертирована функцией jsonify)
             )
 
     return render_ext("message/add_edit.html",
-        caption = "Add a message",
-        form = form,
+        title = "Messages :: Add",
+        section = "Add a message",
+        form = form,    # (потенциально опасная)
     )
 
 
@@ -258,21 +257,22 @@ def message_edit():
             return render_ext("message/add_edit.html",
                 default = redirect(url_for('messages')),
                 message = "The message successfully updated!",
-                caption = "Edit the message",
-                form = form,
+                section = "Edit the message",
+                form = form,    # (потенциально опасная)
             )
 
         else:
             return render_ext("message/add_edit.html",
                 default = redirect(url_for('messages')),
                 message = ("Please check your data entered!", "warning"),
-                caption = "Edit the message",
-                form = form,
+                section = "Edit the message",
+                form = form,    # (потенциально опасная)
             )
 
     return render_ext("message/add_edit.html",
-        caption = "Edit the message",
-        form = form,
+        title = "Messages :: Edit",
+        section = "Edit the message",
+        form = form,    # (потенциально опасная)
     )
 
 
