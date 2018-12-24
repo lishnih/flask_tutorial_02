@@ -13,20 +13,21 @@ from ..models.message import Message
 
 class MessageForm(Form):
     id = HiddenField()
-
     author = StringField('Author:', [
             validators.DataRequired(),
         ],
         render_kw={
-            "placeholder": "Enter your name",
+            "placeholder": "Your name (required)",
         }
     )
-
     message = TextAreaField('Message:', [
+            validators.DataRequired(),
             validators.Length(min=2),
-        ]
+        ],
+        render_kw={
+            "placeholder": "Your message (required)",
+        }
     )
-
     submit = SubmitField('Submit')
 
     def __init__(self, form, message=None, label=None, **kargs):

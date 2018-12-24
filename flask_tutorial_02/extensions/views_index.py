@@ -105,8 +105,7 @@ def row_iter(names, row, seq=None):
 
 @app.route("/", methods=['GET', 'POST'])
 def messages():
-    engine = db.session.bind
-    if not engine.dialect.has_table(engine, "messages"):
+    if not db.engine.dialect.has_table(db.engine, "messages"):
         db.create_all()
 
     columns = Message.__table__.columns.keys()

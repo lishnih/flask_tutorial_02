@@ -9,7 +9,7 @@ import time
 
 from flask import request, g
 
-from ..main import app, db
+from ..app import app, db
 from ..models.http_request import HttpRequest
 
 
